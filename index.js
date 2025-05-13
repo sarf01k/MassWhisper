@@ -26,6 +26,33 @@ async function readContactsFromCSV(filePath) {
     });
 }
 
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function sendInBatches(
+    socket,
+    contacts,
+    imageBuffer,
+    batchSize = 10,
+    delayMs = 2000
+) {
+    for (let i = 0; i < contacts.length; i += batchSize) {
+        const batch = contacts.slice(i, i + batchSize);
+        await Promise.all(
+            batch.map((contact) =>
+                socket.sendMessage(contact, {
+                    image: imageBuffer,
+                    caption:
+                        "📸 Check out this cool video: https://www.youtube.com",
+                })
+            )
+        );
+        console.log(`- Sent batch ${i / batchSize + 1}`);
+        await delay(delayMs);
+    }
+}
+
 async function startSocket() {
     const { version } = await fetchLatestBaileysVersion();
     const { state, saveCreds } = await useMultiFileAuthState("auth_info");
@@ -61,13 +88,8 @@ async function startSocket() {
 
                 const imageBuffer = fs.readFileSync("ak.jpg");
 
-                for (const contact of contacts) {
-                    await socket.sendMessage(contact, {
-                        image: imageBuffer,
-                        caption:
-                            "📸 Check out this cool video:\nhttps://www.youtube.com",
-                    });
-                }
+                await sendInBatches(socket, contacts, imageBuffer);
+
                 console.log(`📤 Message sent.`);
 
                 process.exit(0);
