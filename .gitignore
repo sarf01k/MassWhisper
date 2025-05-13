@@ -1,0 +1,6 @@
+/auth_info
+/node_modules
+*.csv
+*.jpg
+*.png
+*.jpeg
