@@ -7,6 +7,7 @@ const {
 const pino = require("pino");
 const fs = require("fs");
 const csv = require("csv-parser");
+const { text } = require("stream/consumers");
 
 async function readContactsFromCSV(filePath) {
     const contacts = [];
@@ -34,7 +35,7 @@ async function sendInBatches(
     socket,
     contacts,
     imageBuffer,
-    batchSize = 10,
+    batchSize = 20,
     delayMs = 2000
 ) {
     for (let i = 0; i < contacts.length; i += batchSize) {
@@ -42,9 +43,10 @@ async function sendInBatches(
         await Promise.all(
             batch.map((contact) =>
                 socket.sendMessage(contact, {
-                    image: imageBuffer,
-                    caption:
-                        "📸 Check out this cool video: https://www.youtube.com",
+                    // image: imageBuffer,
+                    // caption:
+                    //     "caption",
+                    text: "message",
                 })
             )
         );
@@ -84,9 +86,9 @@ async function startSocket() {
             } else if (connection == "open") {
                 console.log("✅ Connected to WhatsApp.");
 
-                const contacts = await readContactsFromCSV("example.csv");
+                const contacts = await readContactsFromCSV("contacts.csv");
 
-                const imageBuffer = fs.readFileSync("ak.jpg");
+                const imageBuffer = fs.readFileSync("image.jpg");
 
                 await sendInBatches(socket, contacts, imageBuffer);
 
